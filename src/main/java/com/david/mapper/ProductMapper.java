@@ -1,7 +1,6 @@
 package com.david.mapper;
 
 import com.david.domain.Product;
-import com.david.dto.ProductDto;
 import com.david.request.ProductRequest;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +14,7 @@ public class ProductMapper implements Function<ProductRequest, Product> {
                 .name(product.getName())
                 .price(product.getPrice())
                 .description(product.getDescription())
+                .quantity(0)
                 .build();
     }
 
