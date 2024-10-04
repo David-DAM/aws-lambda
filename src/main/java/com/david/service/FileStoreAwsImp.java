@@ -1,10 +1,12 @@
 package com.david.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import lombok.AllArgsConstructor;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 
@@ -17,12 +19,17 @@ public class FileStoreAwsImp implements FileStoreInterface {
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;
 
+    @SneakyThrows
     @Override
-    public String upload(File file) {
+    public String upload(MultipartFile file) {
 
         String name = file.getName();
 
-        s3Client.putObject(BUCKET_NAME, name, file);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(file.getSize());
+        metadata.setContentType(file.getContentType());
+
+        s3Client.putObject(BUCKET_NAME, name, file.getInputStream(), metadata);
 
         return BUCKET_NAME + "/" + name;
     }

@@ -9,6 +9,7 @@ import com.david.request.ProductRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,13 +23,13 @@ public class ProductService {
     private final FileStoreInterface fileStoreInterface;
     private final ProductRepository productRepository;
 
-    public ProductDto save(ProductRequest productRequest) {
+    public ProductDto save(ProductRequest productRequest, MultipartFile image) {
 
         String imageUrl;
 
         try {
 
-            imageUrl = fileStoreInterface.upload(productRequest.getImage());
+            imageUrl = fileStoreInterface.upload(image);
 
         } catch (Exception e) {
 
@@ -64,6 +65,14 @@ public class ProductService {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
 
         return productDtoMapper.apply(product);
+    }
+
+    public void delete(Long id) {
+
+        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+
+        productRepository.delete(product);
+
     }
 
 }

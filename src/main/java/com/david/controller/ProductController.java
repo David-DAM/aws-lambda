@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,15 +18,15 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping(produces = "application/json", consumes = "application/json")
-    public ResponseEntity<ProductDto> save(@RequestBody ProductRequest productRequest) {
+    @PostMapping()
+    public ResponseEntity<ProductDto> save(@RequestBody ProductRequest productRequest, @RequestParam MultipartFile image) {
 
-        ProductDto saved = productService.save(productRequest);
+        ProductDto saved = productService.save(productRequest, image);
 
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @GetMapping(produces = "application/json", consumes = "application/json")
+    @GetMapping()
     public ResponseEntity<List<ProductDto>> findAll() {
 
         List<ProductDto> productDtoList = productService.findAll();
@@ -33,11 +34,19 @@ public class ProductController {
         return new ResponseEntity<>(productDtoList, HttpStatus.OK);
     }
 
-    @GetMapping(name = "/{id}", produces = "application/json", consumes = "application/json")
-    public ResponseEntity<ProductDto> findById(@RequestParam Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDto> findById(@PathVariable Long id) {
 
         ProductDto productDto = productService.findById(id);
 
         return new ResponseEntity<>(productDto, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+
+        productService.delete(id);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
