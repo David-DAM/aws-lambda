@@ -23,26 +23,34 @@ public class ProductService {
     private final FileStoreInterface fileStoreInterface;
     private final ProductRepository productRepository;
 
-    public ProductDto save(ProductRequest productRequest, MultipartFile image) {
+    public ProductDto save(ProductRequest productRequest) {
+
+        Product product = productMapper.apply(productRequest);
+
+        Product saved = productRepository.save(product);
+
+        return productDtoMapper.apply(saved);
+    }
+
+    public void saveImage(Long id, MultipartFile file) {
+
+        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
 
         String imageUrl;
 
         try {
 
-            imageUrl = fileStoreInterface.upload(image);
+            imageUrl = fileStoreInterface.upload(file);
 
         } catch (Exception e) {
 
             throw new RuntimeException(e);
         }
 
-        Product product = productMapper.apply(productRequest);
-
         product.setImageUrl(imageUrl);
 
-        Product saved = productRepository.save(product);
+        productRepository.save(product);
 
-        return productDtoMapper.apply(saved);
     }
 
     public ProductDto update(ProductRequest productRequest) {

@@ -19,11 +19,19 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping()
-    public ResponseEntity<ProductDto> save(@RequestBody ProductRequest productRequest, @RequestParam MultipartFile image) {
+    public ResponseEntity<ProductDto> save(@RequestBody ProductRequest productRequest) {
 
-        ProductDto saved = productService.save(productRequest, image);
+        ProductDto saved = productService.save(productRequest);
 
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<Void> saveImage(@PathVariable Long id, @RequestParam MultipartFile file) {
+
+        productService.saveImage(id, file);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping()
