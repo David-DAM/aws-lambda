@@ -1,16 +1,7 @@
-# Configure the AWS Provider
 provider "aws" {
   region = "eu-west-3"
 }
 
-# resource "aws_vpc" "products" {
-#   cidr_block       = "10.0.0.0/16"
-#   instance_tenancy = "default"
-#
-#   tags = {
-#     Name = "main"
-#   }
-# }
 data "aws_availability_zones" "available" {}
 
 module "vpc" {
@@ -67,7 +58,6 @@ resource "aws_security_group" "products" {
   }
 }
 
-# Create a Database
 resource "aws_db_instance" "products" {
   identifier           = "products-test-database"
   db_name              = "products"
@@ -82,4 +72,70 @@ resource "aws_db_instance" "products" {
   parameter_group_name = aws_db_parameter_group.products.name
   publicly_accessible  = true
   skip_final_snapshot  = true
+}
+
+resource "aws_s3_bucket" "products" {
+  bucket        = "products-images-test"
+  force_destroy = true
+
+  tags = {
+    Name        = "Products"
+    Environment = "Test"
+  }
+}
+
+resource "aws_s3_bucket" "products-lambda" {
+  bucket        = "products-lambda-code"
+  force_destroy = true
+
+  tags = {
+    Name        = "Products"
+    Environment = "Test"
+  }
+}
+
+resource "aws_s3_object" "products-lambda-code" {
+  bucket = aws_s3_bucket.products-lambda.id
+
+  key    = "products-lamba-code.zip"
+  source = "../target/aws-lambda-1.0-SNAPSHOT-lambda-package.zip"
+
+  etag = filemd5("../target/aws-lambda-1.0-SNAPSHOT-lambda-package.zip")
+}
+
+resource "aws_iam_role" "products-lambda" {
+  name = "serverless_lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2024-10-13"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "products-lambda" {
+  role       = aws_iam_role.products-lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "products" {
+  function_name = "products-crud"
+
+  s3_bucket = aws_s3_bucket.products-lambda.id
+  s3_key    = aws_s3_object.products-lambda-code.key
+
+  runtime = "java17"
+  handler = "com.david.StreamLambdaHandler::handleRequest"
+
+  source_code_hash = aws_s3_object.products-lambda-code.key
+
+  role = aws_iam_role.products-lambda.arn
 }
