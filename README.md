@@ -1,82 +1,117 @@
-# aws-lambda serverless API
-The aws-lambda project, created with [`aws-serverless-java-container`](https://github.com/aws/serverless-java-container).
+# Proyecto AWS Lambda con Spring Boot 3
 
-The starter project defines a simple `/ping` resource that can accept `GET` requests with its tests.
+Este proyecto implementa un servicio CRUD de productos utilizando AWS Lambda y Spring Boot 3. Las imágenes asociadas a
+los productos se almacenan en un bucket de S3. Además, se utiliza Terraform para gestionar la infraestructura necesaria
+en AWS, incluyendo la base de datos PostgreSQL, S3, API Gateway y los permisos necesarios para la ejecución de la
+Lambda.
 
-The project folder also includes a `template.yml` file. You can use this [SAM](https://github.com/awslabs/serverless-application-model) file to deploy the project to AWS Lambda and Amazon API Gateway or test in local with the [SAM CLI](https://github.com/awslabs/aws-sam-cli). 
+## Tabla de Contenidos
 
-## Pre-requisites
-* [AWS CLI](https://aws.amazon.com/cli/)
-* [SAM CLI](https://github.com/awslabs/aws-sam-cli)
-* [Gradle](https://gradle.org/) or [Maven](https://maven.apache.org/)
+- [Requisitos Previos](#requisitos-previos)
+- [Arquitectura](#arquitectura)
+- [Instalación](#instalación)
+- [Ejecución](#ejecución)
+- [Flujo de la Aplicación](#flujo-de-la-aplicación)
+- [Infraestructura con Terraform](#infraestructura-con-terraform)
+- [Dependencias](#dependencias)
+- [Contribuciones](#contribuciones)
 
-## Building the project
-You can use the SAM CLI to quickly build the project
-```bash
-$ mvn archetype:generate -DartifactId=aws-lambda -DarchetypeGroupId=com.amazonaws.serverless.archetypes -DarchetypeArtifactId=aws-serverless-jersey-archetype -DarchetypeVersion=2.0.3 -DgroupId=com.david -Dversion=1.0-SNAPSHOT -Dinteractive=false
-$ cd aws-lambda
-$ sam build
-Building resource 'AwsLambdaFunction'
-Running JavaGradleWorkflow:GradleBuild
-Running JavaGradleWorkflow:CopyArtifacts
+---
 
-Build Succeeded
+## Requisitos Previos
 
-Built Artifacts  : .aws-sam/build
-Built Template   : .aws-sam/build/template.yaml
+- **Java**: Versión 17 o superior.
+- **Maven**: Para construir el proyecto.
+- **Terraform**: Instalado y configurado.
+- **AWS CLI**: Configurado con credenciales y permisos adecuados.
 
-Commands you can use next
-=========================
-[*] Invoke Function: sam local invoke
-[*] Deploy: sam deploy --guided
-```
+## Arquitectura
 
-## Testing locally with the SAM CLI
+El proyecto sigue una arquitectura basada en AWS Lambda con los siguientes componentes principales:
 
-From the project root folder - where the `template.yml` file is located - start the API with the SAM CLI.
+- **AWS Lambda**: Funciones para manejar las operaciones CRUD.
+- **Amazon API Gateway**: Punto de entrada para las solicitudes HTTP.
+- **Amazon S3**: Almacenamiento de imágenes de productos.
+- **Amazon RDS (PostgreSQL)**: Base de datos para almacenar los datos de los productos.
+- **IAM Roles y Policies**: Gestión de permisos para los recursos de AWS.
 
-```bash
-$ sam local start-api
+## Instalación
 
-...
-Mounting com.amazonaws.serverless.archetypes.StreamLambdaHandler::handleRequest (java11) at http://127.0.0.1:3000/{proxy+} [OPTIONS GET HEAD POST PUT DELETE PATCH]
-...
-```
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/DAVID-DAM/aws-lambda.git
+   cd aws-lambda
+   ```
 
-Using a new shell, you can send a test ping request to your API:
+2. Construye el proyecto usando Maven:
+   ```bash
+   mvn clean package
+   ```
 
-```bash
-$ curl -s http://127.0.0.1:3000/ping | python -m json.tool
+3. Configura los recursos de AWS usando Terraform:
+   ```bash
+   cd terraform
+   terraform init
+   terraform apply
+   ```
 
-{
-    "pong": "Hello, World!"
-}
-``` 
+   Esto creará los recursos necesarios en tu cuenta de AWS.
 
-## Deploying to AWS
-To deploy the application in your AWS account, you can use the SAM CLI's guided deployment process and follow the instructions on the screen
+## Ejecución
 
-```
-$ sam deploy --guided
-```
+1. Genera el artefacto `.jar` o `.zip` necesario para AWS Lambda:
+   ```bash
+   mvn package
+   ```
 
-Once the deployment is completed, the SAM CLI will print out the stack's outputs, including the new application URL. You can use `curl` or a web browser to make a call to the URL
+2. Despliega la función Lambda utilizando Terraform o manualmente a través de la consola de AWS.
 
-```
-...
--------------------------------------------------------------------------------------------------------------
-OutputKey-Description                        OutputValue
--------------------------------------------------------------------------------------------------------------
-AwsLambdaApi - URL for application            https://xxxxxxxxxx.execute-api.us-west-2.amazonaws.com/Prod/pets
--------------------------------------------------------------------------------------------------------------
-```
+3. Una vez desplegado, utiliza la URL proporcionada por API Gateway para interactuar con el servicio CRUD.
 
-Copy the `OutputValue` into a browser or use curl to test your first request:
+## Flujo de la Aplicación
 
-```bash
-$ curl -s https://xxxxxxx.execute-api.us-west-2.amazonaws.com/Prod/ping | python -m json.tool
+1. **Operaciones CRUD**:
+    - Crear, leer, actualizar y eliminar productos.
+    - Los datos de los productos se almacenan en PostgreSQL.
 
-{
-    "pong": "Hello, World!"
-}
-```
+2. **Gestión de Imágenes**:
+    - Al crear o actualizar un producto, las imágenes asociadas se cargan a un bucket de S3.
+    - Las URLs de las imágenes se almacenan en la base de datos.
+
+3. **Respuesta**:
+    - Los endpoints de API Gateway devuelven respuestas JSON con el estado de las operaciones y los datos de los
+      productos.
+
+## Infraestructura con Terraform
+
+### Recursos Creados
+
+- **Lambda Function**: Implementa la lógica del CRUD.
+- **API Gateway**: Exposición de los endpoints HTTP.
+- **RDS (PostgreSQL)**: Base de datos para almacenamiento.
+- **S3 Bucket**: Almacenamiento de imágenes.
+- **IAM Roles y Policies**: Gestión de permisos para acceder a los recursos.
+
+### Configuración Básica
+
+1. Configura las variables db_username y db_password creando el archivo `terraform/secret.tfvars`.
+2. Aplica los cambios con:
+   ```bash
+   terraform apply
+   ```
+
+Esto creará y configurará automáticamente todos los recursos.
+
+## Dependencias
+
+Las principales dependencias utilizadas en el proyecto son:
+
+- **Spring Boot**: Para la estructura y lógica de la aplicación.
+- **Lombok**: Reducción de código repetitivo.
+- **Spring Data JPA**: Para la interacción con PostgreSQL.
+- **AWS SDK**: Para interactuar con S3 y otros servicios de AWS.
+
+## Contribuciones
+
+¡Contribuciones son bienvenidas! Si tienes ideas, mejoras o encuentras algún problema, abre un issue o envía un pull
+request.
