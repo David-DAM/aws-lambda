@@ -37,8 +37,8 @@ build/
 ### Mac OS ###
 .DS_Store
 /src/main/resources/secrets.properties
-/terraform/secret.tfvars
-/terraform/.terraform/
-/terraform/.terraform.lock.hcl
-/terraform/terraform.tfstate
-/terraform/terraform.tfstate.backup
+secret.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
